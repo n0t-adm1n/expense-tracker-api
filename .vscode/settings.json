@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Local Expense Tracker",
+            "database": "expense_tracker_local",
+            "username": "dev_user"
+        }
+    ]
+}
