@@ -49,6 +49,7 @@ app.get('/api/transactions', async (req, res) => {
     }
 });
 
+// Delete a transaction with given id
 app.delete('/api/transactions/:id', async (req, res) => {
     try {
         const {id} = req.params;
@@ -57,7 +58,7 @@ app.delete('/api/transactions/:id', async (req, res) => {
 
         // if transaction with id does not exists
         if(deletedTransaction.rows.length == 0) {
-            res.status(404).json({error: 'Transaction not found'});
+            return res.status(404).json({error: 'Transaction not found'});
         }
 
         res.status(200).json({message: 'Transaction deleted.'});
@@ -65,6 +66,30 @@ app.delete('/api/transactions/:id', async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).json({error: 'Server error while deleting transactions.'});
+    }
+})
+
+// Update a transaction with given id
+app.put('/api/transactions/:id', async (req, res) => {
+    try {
+        const {id} = req.params;
+        const {amount, type, category, description, transaction_date} = req.body;
+
+        const updatedTransaction = await pool.query(
+            `UPDATE transactions 
+            SET amount = $1, type = $2, category = $3, description = $4, transaction_date = $5
+            WHERE id = $6 RETURNING *`, [amount, type, category, description, transaction_date || new Date(), id]
+        );
+
+        if(updatedTransaction.rowCount == 0) {
+            return res.status(404).json({error : 'Transaction not found.'});
+        }
+
+        res.status(200).json(updatedTransaction.rows[0]);
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({error : 'Server error while updating transaction.'})
     }
 })
 
