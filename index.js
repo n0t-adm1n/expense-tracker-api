@@ -49,6 +49,25 @@ app.get('/api/transactions', async (req, res) => {
     }
 });
 
+app.delete('/api/transactions/:id', async (req, res) => {
+    try {
+        const {id} = req.params;
+
+        const deletedTransaction = await pool.query('DELETE FROM transactions WHERE id = $1 RETURNING *', [id]);
+
+        // if transaction with id does not exists
+        if(deletedTransaction.rows.length == 0) {
+            res.status(404).json({error: 'Transaction not found'});
+        }
+
+        res.status(200).json({message: 'Transaction deleted.'});
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({error: 'Server error while deleting transactions.'});
+    }
+})
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

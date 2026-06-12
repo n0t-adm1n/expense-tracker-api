@@ -8,7 +8,8 @@
             "driver": "PostgreSQL",
             "name": "Local Expense Tracker",
             "database": "expense_tracker_local",
-            "username": "dev_user"
+            "username": "dev_user",
+            "password": "pwd123"
         }
     ]
 }
