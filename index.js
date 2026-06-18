@@ -93,6 +93,41 @@ app.put('/api/transactions/:id', async (req, res) => {
     }
 })
 
+// POST a bulk array of transactions (For CSV Uploads)
+app.post("/api/transactions/bulk", async (req, res) => {
+  try {
+    const transactions = req.body;
+
+    // Validate that the request is an array
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      return res.status(400).json({ error: "Request body must be a non-empty array of transactions" });
+    }
+
+    // Build the SQL query for multiple inserts
+    const values = [];
+    const queryParameters = [];
+    let paramIndex = 1;
+
+    transactions.forEach((t) => {
+      values.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3})`);
+      queryParameters.push(t.amount, t.description, t.category, t.type);
+      paramIndex += 4;
+    });
+
+    const insertQuery = `
+      INSERT INTO transactions (amount, description, category, type)
+      VALUES ${values.join(", ")}
+      RETURNING *;
+    `;
+
+    const result = await pool.query(insertQuery, queryParameters);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error during bulk insert:", err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
