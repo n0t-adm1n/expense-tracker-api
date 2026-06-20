@@ -132,7 +132,7 @@ app.post("/api/transactions/bulk", async (req, res) => {
 });
 
 // GET for AI insight
-app.get("/api/insight", async (req, res) => {
+app.get("/api/insights", async (req, res) => {
     try {
         const result = await pool.query("SELECT amount, category, type, description FROM transactions");
 
@@ -150,7 +150,7 @@ app.get("/api/insight", async (req, res) => {
             Do not use introductory greetings, just give the 3 bullet points.
         `;
 
-        const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
+        const model = genAI.getGenerativeModel({model: "gemini-3.5-flash"});
         const aiResponse = await model.generateContent(prompt);
 
         res.json({insight: aiResponse.response.text() });
