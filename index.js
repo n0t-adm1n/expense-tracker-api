@@ -1,10 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const {GoogleGenerativeAI} = require("@google/generative-ai")
 const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // middle ware
 app.use(cors());
@@ -126,6 +129,36 @@ app.post("/api/transactions/bulk", async (req, res) => {
     console.error("Error during bulk insert:", err.message);
     res.status(500).send("Server Error");
   }
+});
+
+// GET for AI insight
+app.get("/api/insight", async (req, res) => {
+    try {
+        const result = await pool.query("SELECT amount, category, type, description FROM transactions");
+
+        const transactions = result.rows;
+
+        if(transactions.length === 0) {
+            return res.json({insight : "You don't have any transactions yet. Add some data to get personalized advice."});
+        }
+
+        const dataString = JSON.stringify(transactions);
+
+        const prompt = `
+            You are an expert financial consultant. Analyze this user's transaction data: ${dataString}. 
+            Give me exactly 3 short, punchy bullet points of advice on how they can save money or optimize their spending based on these specific habits. 
+            Do not use introductory greetings, just give the 3 bullet points.
+        `;
+
+        const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
+        const aiResponse = await model.generateContent(prompt);
+
+        res.json({insight: aiResponse.response.text() });
+
+    } catch (err) {
+        console.error("AI error:", err.message);
+        res.status(500).json({error:"Error occured while generating AI insight"})
+    }
 });
 
 app.listen(PORT, () => {
